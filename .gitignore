@@ -29,3 +29,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Internal Video Recording Materials (not for GitHub)
+VIDEO_SCRIPT.md
+DEMO_DATA.md
