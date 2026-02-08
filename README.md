@@ -162,7 +162,91 @@ curl http://localhost:5177/api/devices/beta-456
 
 Each customer can only see their own devices and telemetry.
 
-## 📁 Project Structure
+## � Hardware Integration Example
+
+### ESP32 with Ethernet
+
+This example shows how to send telemetry data from an ESP32 microcontroller with Ethernet connectivity.
+
+```cpp
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  ETH.begin(
+    ETH_ADDR,
+    ETH_POWER_PIN,
+    ETH_MDC_PIN,
+    ETH_MDIO_PIN,
+    ETH_TYPE,
+    ETH_CLK_MODE
+  );
+
+  Serial.println("Waiting for Ethernet...");
+  while (!ETH.linkUp()) {
+    delay(500);
+  }
+
+  Serial.println("Ethernet connected");
+}
+
+float readTemperature() {
+  // Replace with real sensor code
+  return 30.0;
+}
+
+void loop() {
+  if (ETH.linkUp()) {
+    float temperature = readTemperature();
+
+    HTTPClient http;
+    String url = String("http://") + API_HOST + ":" + API_PORT + API_PATH;
+
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+
+    StaticJsonDocument<256> doc;
+    doc["customerId"] = CUSTOMER_ID;
+    doc["deviceId"] = DEVICE_ID;
+    doc["eventId"] = "esp32-" + String(millis());
+    doc["recordedAt"] = "2026-02-05T10:00:00Z"; // Or generate ISO8601
+    doc["type"] = "temperature";
+    doc["value"] = temperature;
+    doc["unit"] = "C";
+
+    String payload;
+    serializeJson(doc, payload);
+
+    int httpResponseCode = http.POST(payload);
+
+    Serial.print("HTTP Response: ");
+    Serial.println(httpResponseCode);
+
+    http.end();
+  }
+
+  delay(10000);
+}
+```
+
+### Core Components
+
+**ESP32 development board**
+- Example: ESP32 Dev Module or ESP32-WROOM-32
+
+**Ethernet PHY module (LAN8720)**
+- Required for wired Ethernet on ESP32
+
+**Temperature sensor**
+- One of the following:
+  - DS18B20 (digital, waterproof option available)
+  - DHT22 (temperature and humidity)
+  - TMP36 (analog)
+
+**RJ45 Ethernet jack with magnetics**
+- Often included on LAN8720 modules
+
+## �📁 Project Structure
 
 ```
 TelemetrySlice/
